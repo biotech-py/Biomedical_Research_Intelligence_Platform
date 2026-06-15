@@ -15,9 +15,9 @@ Using abstractive summarization and biomedical named entity recognition (NER) to
 
 ---
 
-## 📸 Application Preview
+## 🚀 Live Demo
 
-![Application Demo](outputs/final_demo.png)
+🔗 https://biomedicalresearchintelligenceplatform.streamlit.app/
 
 ---
 
