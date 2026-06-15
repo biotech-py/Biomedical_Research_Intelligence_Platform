@@ -15,135 +15,138 @@ Using abstractive summarization and biomedical named entity recognition (NER) to
 
 ---
 
-## 🚀 Live Demo
-
-🔗 Streamlit Application:
-
-https://biomedicalresearchintelligenceplatform.streamlit.app/
-
-Interact with the Biomedical Research Intelligence Platform directly in your browser. Upload biomedical literature and generate AI-powered summaries, named entity recognition (NER), and key research insights.
-
----
-
 ## 📸 Application Preview
 
 ![Application Demo](outputs/final_demo.png)
 
 ---
 
-## 🚀 Overview
+## 📌 Project Overview
 
-Biomedical research papers contain vast amounts of valuable information that can be difficult and time-consuming to analyze manually.
+Biomedical researchers often analyze large volumes of scientific literature to identify important genes, diseases, drugs, therapies, and biomarkers.
 
-The Biomedical Research Intelligence Platform leverages modern Transformer-based Natural Language Processing (NLP) models to automatically:
+The Biomedical Research Intelligence Platform streamlines this process by automatically:
 
-- Summarize biomedical literature
-- Extract key biomedical entities
-- Generate research insights
-- Analyze scientific abstracts
-- Visualize extracted knowledge
+* Summarizing biomedical abstracts
+* Detecting important biomedical entities
+* Categorizing biomedical concepts
+* Generating research insights
+* Visualizing literature analytics
+* Providing downloadable summaries
 
-This platform serves as a lightweight research assistant for biomedical scientists, students, and researchers.
+The platform offers a fast and user-friendly environment for biomedical literature exploration and preliminary research analysis.
 
 ---
 
-## 🧠 AI Models Used
+## 🛠️ Technologies Used
 
-### 📄 Literature Summarization
+| Technology     | Purpose                        |
+| -------------- | ------------------------------ |
+| Python         | Core Programming               |
+| Streamlit      | Web Application Development    |
+| Pandas         | Data Processing                |
+| Plotly         | Interactive Visualizations     |
+| Regex          | Biomedical Entity Extraction   |
+| Rule-Based NLP | Literature Analysis & Insights |
 
-Model:
+---
+
+## 🧬 Biomedical Entity Categories
+
+The platform detects and classifies biomedical entities into the following categories:
+
+| Category  | Examples                       |
+| --------- | ------------------------------ |
+| Gene      | EGFR, KRAS, TP53, BRCA1, BRCA2 |
+| Drug      | Cetuximab, Osimertinib         |
+| Disease   | Cancer, Tumor                  |
+| Therapy   | Treatment, Therapeutic         |
+| Biomarker | Biomarker, Biomarkers          |
+
+---
+
+## 📊 Example Workflow
+
+1. Paste a biomedical abstract.
+2. Click **Analyze Literature**.
+3. Generate an automated summary.
+4. Detect biomedical entities.
+5. View categorized entities.
+6. Generate research insights.
+7. Explore literature analytics.
+8. Download the generated summary.
+
+---
+
+## 📈 Dashboard Outputs
+
+### Research Intelligence Metrics
+
+* Total Biomedical Entities
+* Word Count
+* Confidence Score
+
+### Biomedical Entity Detection
+
+* Entity Name
+* Category
+* Confidence Score
+
+### Literature Analytics
+
+* Entity Distribution Visualization
+* Summary Statistics
+
+---
+
+## 📷 Application Screenshots
+
+### Home Page
+
+![Home Page](outputs/homepage.png)
+
+### AI Summary & Research Insight
+
+![Summary](outputs/summary.png)
+
+### Biomedical Entity Detection
+
+![Entity Detection](outputs/entities.png)
+
+### Literature Analytics Dashboard
+
+![Analytics](outputs/analytics.png)
+
+---
+
+## 🧪 Example Input
 
 ```text
-facebook/bart-large-cnn
-```
-
-Purpose:
-
-- Abstractive summarization
-- Scientific text compression
-- Literature understanding
-
-### 🧬 Biomedical Named Entity Recognition
-
-Model:
-
-```text
-d4data/biomedical-ner-all
-```
-
-Purpose:
-
-- Biomedical entity extraction
-- Knowledge mining
-- Scientific information retrieval
-
----
-
-## ✨ Features
-
-### 🤖 Transformer-Based Summarization
-
-Generate concise summaries of biomedical abstracts using BART.
-
-### 🧬 Biomedical NER
-
-Automatically identify:
-
-- Biomedical Markers
-- Therapeutic Agents
-- Clinical Features
-- Clinical Parameters
-- Research Entities
-
-### 💡 Research Insight Engine
-
-Generate high-level insights from detected biomedical entities.
-
-### 📊 Literature Analytics
-
-Interactive visualizations including:
-
-- Entity distribution
-- Confidence scoring
-- Document statistics
-
-### 📥 Downloadable Reports
-
-Export generated summaries for further research use.
-
----
-
-## 📈 Example Workflow
-
-```text
-Biomedical Abstract
-          │
-          ▼
-BART Summarization
-          │
-          ▼
-Biomedical NER
-          │
-          ▼
-Research Insights
-          │
-          ▼
-Analytics Dashboard
+The EGFR T790M mutation is one of the major causes of acquired resistance to first-generation EGFR tyrosine kinase inhibitors in non-small cell lung cancer. Osimertinib has emerged as an effective therapeutic strategy targeting EGFR T790M-positive tumors.
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## ⚙️ Installation
 
-| Component | Technology |
-|------------|------------|
-| Language | Python |
-| Frontend | Streamlit |
-| NLP | Hugging Face Transformers |
-| Summarization | BART |
-| NER | Biomedical NER |
-| Analytics | Plotly |
-| Data Handling | Pandas |
+Clone the repository:
+
+```bash
+git clone https://github.com/biotech-py/Biomedical_Research_Intelligence_Platform.git
+cd Biomedical_Research_Intelligence_Platform
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the application:
+
+```bash
+streamlit run app.py
+```
 
 ---
 
@@ -157,19 +160,36 @@ Biomedical_Research_Intelligence_Platform/
 ├── requirements.txt
 │
 └── outputs/
-    ├── demo_result.png
-    └── final_demo.png
+    ├── homepage.png
+    ├── summary.png
+    ├── entities.png
+    └── analytics.png
 ```
 
 ---
 
-## 🎯 Applications
+## 🎓 Skills Demonstrated
 
-- Biomedical Literature Mining
-- Scientific Knowledge Extraction
-- Research Assistance
-- Academic Literature Review
-- Drug Discovery Research Support
+* Biomedical Natural Language Processing (NLP)
+* Scientific Literature Analysis
+* Biomedical Entity Extraction
+* Information Retrieval
+* Research Insight Generation
+* Data Visualization
+* Streamlit Application Development
+* Research Data Analytics
+* Python Programming
+
+---
+
+## 🔮 Future Improvements
+
+* PubMed Integration
+* PDF Research Paper Analysis
+* Advanced Biomedical NER Models
+* Multi-Document Analysis
+* Knowledge Graph Generation
+* Biomedical Question Answering System
 
 ---
 
@@ -177,19 +197,7 @@ Biomedical_Research_Intelligence_Platform/
 
 **Nirupam Joarder**
 
-B.Tech Biotechnology  
-National Institute of Technology Rourkela
-
----
-
-## ⭐ Future Improvements
-
-- PubMed API Integration
-- Research Paper Search Engine
-- PDF Upload Support
-- Knowledge Graph Generation
-- Biomedical Question Answering
-- Drug-Target Relationship Extraction
+Biomedical Engineering | Biomedical NLP | AI for Healthcare | Computer Vision
 
 ---
 
