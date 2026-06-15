@@ -15,6 +15,16 @@ Using abstractive summarization and biomedical named entity recognition (NER) to
 
 ---
 
+## 🚀 Live Demo
+
+🔗 Streamlit Application:
+
+https://biomedicalresearchintelligenceplatform.streamlit.app/
+
+Interact with the Biomedical Research Intelligence Platform directly in your browser. Upload biomedical literature and generate AI-powered summaries, named entity recognition (NER), and key research insights.
+
+---
+
 ## 📸 Application Preview
 
 ![Application Demo](outputs/final_demo.png)
