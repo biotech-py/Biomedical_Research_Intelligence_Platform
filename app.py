@@ -89,7 +89,7 @@ The EGFR T790M mutation is one of the major causes of acquired resistance to fir
 @st.cache_resource
 def load_model():
 
-    model_name = "facebook/bart-large-cnn"
+    model_name = "sshleifer/distilbart-cnn-12-6"
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
