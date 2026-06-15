@@ -86,8 +86,8 @@ The EGFR T790M mutation is one of the major causes of acquired resistance to fir
 def load_summarizer():
 
     return pipeline(
-        "text2text-generation",
-        model="google/flan-t5-small"
+        "summarization",
+        model="sshleifer/distilbart-cnn-12-6"
     )
 
 summarizer = load_summarizer()
@@ -100,7 +100,7 @@ def load_ner_model():
         aggregation_strategy="simple"
     )
 
-ner_model = load_ner_model()
+#ner_model = load_ner_model()
 LABEL_MAP = {
     "Diagnostic_procedure": "Biomedical Marker",
     "Medication": "Therapeutic Agent",
@@ -148,16 +148,17 @@ if st.button("🔍 Analyze Literature"):
             # --------------------------
 
             summary = summarizer(
-            f"Summarize this biomedical abstract: {text}",
-            max_length=100,
+            text,
+            max_length=80,
+            min_length=20,
             do_sample=False
-            )[0]["generated_text"]
+            )[0]["summary_text"]
 
             # --------------------------
             # BIOMEDICAL NER
             # --------------------------
 
-            entities = ner_model(text)
+            entities = []
 
             entity_data = []
 
