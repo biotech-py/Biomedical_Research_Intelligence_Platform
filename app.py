@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from transformers import (
+from transformers import pipeline (
     AutoTokenizer,
     AutoModelForSeq2SeqLM,
     pipeline
@@ -87,18 +87,14 @@ The EGFR T790M mutation is one of the major causes of acquired resistance to fir
 # LOAD MODEL
 # --------------------------------------------------
 @st.cache_resource
-def load_model():
+def load_summarizer():
 
-    model_name = "sshleifer/distilbart-cnn-12-6"
+    return pipeline(
+        "summarization",
+        model="sshleifer/distilbart-cnn-12-6"
+    )
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-
-    return tokenizer, model
-
-
-tokenizer, model = load_model()
+summarizer = load_summarizer()
 @st.cache_resource
 def load_ner_model():
 
@@ -155,25 +151,12 @@ if st.button("🔍 Analyze Literature"):
             # BART SUMMARY
             # --------------------------
 
-            inputs = tokenizer(
-                text,
-                return_tensors="pt",
-                max_length=1024,
-                truncation=True
-            )
-
-            summary_ids = model.generate(
-                inputs["input_ids"],
-                max_length=80,
-                min_length=20,
-                num_beams=4,
-                early_stopping=True
-            )
-
-            summary = tokenizer.decode(
-                summary_ids[0],
-                skip_special_tokens=True
-            )
+            summary = summarizer(
+            text,
+            max_length=80,
+            min_length=20,
+            do_sample=False
+            )[0]["summary_text"]
 
             # --------------------------
             # BIOMEDICAL NER
