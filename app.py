@@ -1,11 +1,7 @@
 import streamlit as st
 import pandas as pd
-from transformers import pipeline (
-    AutoTokenizer,
-    AutoModelForSeq2SeqLM,
-    pipeline
-)
-
+from transformers import pipeline
+import plotly.express as px
 import plotly.express as px
 
 # --------------------------------------------------
