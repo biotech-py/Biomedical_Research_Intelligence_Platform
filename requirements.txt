@@ -1,8 +1,7 @@
 streamlit
 pandas
 transformers
+torch
 plotly
 sentencepiece
 protobuf
-accelerate
-torch

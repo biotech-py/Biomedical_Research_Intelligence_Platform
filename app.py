@@ -86,8 +86,8 @@ The EGFR T790M mutation is one of the major causes of acquired resistance to fir
 def load_summarizer():
 
     return pipeline(
-        task="summarization",
-        model="sshleifer/distilbart-cnn-12-6"
+        "text2text-generation",
+        model="google/flan-t5-small"
     )
 
 summarizer = load_summarizer()
@@ -148,11 +148,10 @@ if st.button("🔍 Analyze Literature"):
             # --------------------------
 
             summary = summarizer(
-            text,
-            max_length=80,
-            min_length=20,
+            f"Summarize this biomedical abstract: {text}",
+            max_length=100,
             do_sample=False
-            )[0]["summary_text"]
+            )[0]["generated_text"]
 
             # --------------------------
             # BIOMEDICAL NER
