@@ -5,3 +5,5 @@ pandas
 plotly
 accelerate
 sentencepiece
+huggingface_hub
+safetensors
