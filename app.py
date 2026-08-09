@@ -1,386 +1,844 @@
 import streamlit as st
 import pandas as pd
-from transformers import pipeline
 import plotly.express as px
+import re
+from transformers import pipeline
 
-# --------------------------------------------------
+
+# ============================================================
 # PAGE CONFIG
-# --------------------------------------------------
+# ============================================================
+
 st.set_page_config(
-    page_title="AI Drug Discovery Literature Assistant",
+    page_title="Biomedical Research Intelligence Platform",
     page_icon="🧬",
     layout="wide"
 )
 
-# --------------------------------------------------
+
+# ============================================================
 # CUSTOM CSS
-# --------------------------------------------------
-st.markdown("""
-<style>
+# ============================================================
 
-.main {
-    padding-top: 1rem;
-}
+st.markdown(
+    """
+    <style>
 
-.metric-card {
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-}
+    .main {
+        padding-top: 1rem;
+    }
 
-</style>
-""", unsafe_allow_html=True)
+    .metric-card {
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+    }
 
-# --------------------------------------------------
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ============================================================
+# SESSION STATE
+# ============================================================
+
+if "sample_text" not in st.session_state:
+    st.session_state.sample_text = ""
+
+
+# ============================================================
 # SIDEBAR
-# --------------------------------------------------
+# ============================================================
+
 with st.sidebar:
 
     st.title("🧬 Research Intelligence")
 
     st.markdown("---")
 
-    st.markdown("""
-    ### Features
+    st.markdown(
+        """
+        ### Features
 
-    ✅ AI Literature Summarization
+        ✅ Transformer-Based Summarization
 
-    ✅ Biomedical Entity Detection
+        ✅ Biomedical Named Entity Recognition
 
-    ✅ Research Insight Engine
+        ✅ Biomedical Entity Classification
 
-    ✅ Literature Analytics
+        ✅ Research Insight Generation
 
-    ✅ Confidence Scoring
+        ✅ Literature Analytics
 
-    ✅ Interactive Visualization
-    """)
+        ✅ Interactive Visualization
 
-    st.markdown("---")
-
-    st.markdown("""
-    ### Models
-
-    📄 Text Summarization Engine
-
-    🧠 Rule-Based Biomedical NLP
-
-    🧬 Biomedical Entity Detection
-
-    🔍 Keyword-Based Entity Recognition
-    """)
+        ✅ Downloadable Analysis Report
+        """
+    )
 
     st.markdown("---")
 
-if st.button("📖 Load Sample Abstract"):
+    st.markdown(
+        """
+        ### NLP Workflow
+
+        📄 Biomedical Literature
+
+        ↓
+
+        🤖 Transformer Summarization
+
+        ↓
+
+        🧬 Biomedical NER
+
+        ↓
+
+        📊 Literature Analytics
+
+        ↓
+
+        💡 Research Insights
+        """
+    )
+
+    st.markdown("---")
+
+    if st.button("📖 Load Sample Abstract"):
 
         st.session_state.sample_text = """
-The EGFR T790M mutation is one of the major causes of acquired resistance to first-generation EGFR tyrosine kinase inhibitors in non-small cell lung cancer. Osimertinib has emerged as an effective therapeutic strategy targeting EGFR T790M-positive tumors.
-"""
+        The EGFR T790M mutation is one of the major causes of acquired
+        resistance to first-generation EGFR tyrosine kinase inhibitors
+        in non-small cell lung cancer. Osimertinib has emerged as an
+        effective therapeutic strategy targeting EGFR T790M-positive
+        tumors. Clinical studies have demonstrated improved response
+        rates in patients with EGFR T790M-positive disease.
+        """
 
-# --------------------------------------------------
-# LOAD MODEL
-# --------------------------------------------------
-summarizer = None
 
-# --------------------------------------------------
+# ============================================================
+# MODEL LOADING
+# ============================================================
+
+@st.cache_resource
+def load_models():
+
+    # Transformer-based text summarization model
+    summarizer = pipeline(
+        "summarization",
+        model="sshleifer/distilbart-cnn-12-6"
+    )
+
+    # Biomedical Named Entity Recognition model
+    biomedical_ner = pipeline(
+        "token-classification",
+        model="d4data/biomedical-ner-all",
+        aggregation_strategy="simple"
+    )
+
+    return summarizer, biomedical_ner
+
+
+# ============================================================
+# LOAD MODELS
+# ============================================================
+
+with st.spinner("Loading NLP models..."):
+
+    try:
+
+        summarizer, biomedical_ner = load_models()
+
+        models_loaded = True
+
+    except Exception as e:
+
+        models_loaded = False
+
+        summarizer = None
+        biomedical_ner = None
+
+        st.error(
+            "Unable to load the NLP models. "
+            "Please check the model dependencies and internet connection."
+        )
+
+
+# ============================================================
 # HERO SECTION
-# --------------------------------------------------
+# ============================================================
+
 st.title("🧬 Biomedical Research Intelligence Platform")
 
-st.markdown("""
-### AI-Powered Biomedical Literature Analysis
+st.markdown(
+    """
+    ### AI-Powered Biomedical Literature Analysis
 
-Using AI-powered summarization and biomedical entity extraction
-to automatically extract insights from scientific literature.
-""")
+    An NLP-based platform for automated biomedical literature
+    summarization, biomedical entity extraction, and research analytics.
+    """
+)
 
 st.markdown("---")
 
-# --------------------------------------------------
-# INPUT
-# --------------------------------------------------
+
+# ============================================================
+# INPUT SECTION
+# ============================================================
+
 default_text = st.session_state.get("sample_text", "")
 
 text = st.text_area(
-    "📄 Paste Biomedical Abstract",
+    "📄 Paste Biomedical Abstract or Research Text",
     value=default_text,
-    height=220
+    height=250,
+    placeholder="Paste a biomedical research abstract here..."
 )
-# --------------------------------------------------
-# --------------------------------------------------
-# ANALYZE
-# --------------------------------------------------
-# --------------------------------------------------
-# ANALYZE
-# --------------------------------------------------
-if st.button("🔍 Analyze Literature"):
 
-    if text.strip():
 
-        biomedical_keywords = [
-            "gene",
-            "protein",
-            "cell",
-            "cancer",
-            "tumor",
-            "dna",
-            "rna",
-            "drug",
-            "therapy",
-            "patient",
-            "mutation",
-            "disease",
-            "treatment",
-            "biomarker",
-            "egfr",
-            "kras",
-            "tp53"
-        ]
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
 
-        keyword_count = sum(
-            1 for word in biomedical_keywords
-            if word in text.lower()
+def is_biomedical_text(text):
+
+    biomedical_terms = [
+        "gene",
+        "protein",
+        "cell",
+        "cancer",
+        "tumor",
+        "dna",
+        "rna",
+        "drug",
+        "therapy",
+        "patient",
+        "mutation",
+        "disease",
+        "treatment",
+        "biomarker",
+        "egfr",
+        "kras",
+        "tp53",
+        "clinical",
+        "molecular",
+        "pathway",
+        "receptor",
+        "inhibitor",
+        "diagnosis",
+        "oncology",
+        "medicine"
+    ]
+
+    text_lower = text.lower()
+
+    matches = [
+        term for term in biomedical_terms
+        if re.search(rf"\b{re.escape(term)}\b", text_lower)
+    ]
+
+    return len(matches) > 0
+
+
+def generate_summary(text):
+
+    # Transformer models have practical input limits.
+    # We therefore use the first portion of the text for summarization.
+    words = text.split()
+
+    if len(words) < 50:
+        return text.strip()
+
+    limited_text = " ".join(words[:900])
+
+    result = summarizer(
+        limited_text,
+        max_length=150,
+        min_length=40,
+        do_sample=False
+    )
+
+    return result[0]["summary_text"]
+
+
+def extract_entities(text):
+
+    results = biomedical_ner(text)
+
+    entity_data = []
+
+    for entity in results:
+
+        entity_data.append(
+            {
+                "Entity": entity["word"],
+                "Category": entity["entity_group"],
+                "Confidence": round(float(entity["score"]), 3)
+            }
         )
 
-        if keyword_count == 0:
+    return pd.DataFrame(entity_data)
+
+
+def generate_research_insight(df_entities, text):
+
+    if df_entities.empty:
+
+        return (
+            "No biomedical entities were confidently detected "
+            "in the provided text."
+        )
+
+    entity_categories = (
+        df_entities["Category"]
+        .value_counts()
+        .to_dict()
+    )
+
+    top_entities = (
+        df_entities["Entity"]
+        .value_counts()
+        .head(5)
+        .index
+        .tolist()
+    )
+
+    category_text = ", ".join(
+        [
+            f"{category} ({count})"
+            for category, count in entity_categories.items()
+        ]
+    )
+
+    entity_text = ", ".join(top_entities)
+
+    insight = f"""
+    The literature contains {len(df_entities)} detected biomedical
+    entity mentions across the following categories: {category_text}.
+
+    The most frequently detected entities include:
+    {entity_text}.
+
+    These entities provide an overview of the major biological,
+    molecular, therapeutic, or clinical concepts represented in
+    the analyzed literature.
+    """
+
+    return insight.strip()
+
+
+def create_report(
+    text,
+    summary,
+    df_entities,
+    insight
+):
+
+    report = []
+
+    report.append(
+        "BIOMEDICAL RESEARCH INTELLIGENCE REPORT"
+    )
+
+    report.append("=" * 60)
+
+    report.append("\nORIGINAL TEXT")
+    report.append("-" * 60)
+    report.append(text)
+
+    report.append("\n\nTRANSFORMER-GENERATED SUMMARY")
+    report.append("-" * 60)
+    report.append(summary)
+
+    report.append("\n\nBIOMEDICAL ENTITIES")
+    report.append("-" * 60)
+
+    if not df_entities.empty:
+
+        report.append(
+            df_entities.to_string(index=False)
+        )
+
+    else:
+
+        report.append(
+            "No biomedical entities detected."
+        )
+
+    report.append("\n\nRESEARCH INSIGHT")
+    report.append("-" * 60)
+    report.append(insight)
+
+    report.append("\n\nLITERATURE ANALYTICS")
+    report.append("-" * 60)
+
+    report.append(
+        f"Total Words: {len(text.split())}"
+    )
+
+    report.append(
+        f"Total Entities: {len(df_entities)}"
+    )
+
+    if not df_entities.empty:
+
+        avg_confidence = df_entities["Confidence"].mean()
+
+        report.append(
+            f"Average Entity Confidence: "
+            f"{avg_confidence:.3f}"
+        )
+
+    return "\n".join(report)
+
+
+# ============================================================
+# ANALYZE BUTTON
+# ============================================================
+
+if st.button("🔍 Analyze Literature", type="primary"):
+
+    if not text.strip():
+
+        st.warning(
+            "Please enter a biomedical abstract or research text."
+        )
+
+        st.stop()
+
+
+    # --------------------------------------------------------
+    # Biomedical input validation
+    # --------------------------------------------------------
+
+    if not is_biomedical_text(text):
+
+        st.error(
+            "The provided text does not appear to contain "
+            "recognizable biomedical content."
+        )
+
+        st.stop()
+
+
+    if not models_loaded:
+
+        st.error(
+            "NLP models could not be loaded. "
+            "Please restart the application and try again."
+        )
+
+        st.stop()
+
+
+    # --------------------------------------------------------
+    # Transformer summarization
+    # --------------------------------------------------------
+
+    with st.spinner(
+        "🤖 Generating Transformer-based summary..."
+    ):
+
+        try:
+
+            summary = generate_summary(text)
+
+        except Exception as e:
 
             st.error(
-                "Input does not appear to be a biomedical abstract."
+                f"Summarization failed: {str(e)}"
             )
 
-            st.stop()
+            summary = text
 
-        with st.spinner("🧠 Running Transformer Model..."):
 
-            try:
+    # --------------------------------------------------------
+    # Biomedical NER
+    # --------------------------------------------------------
 
-                sentences = [s.strip() for s in text.split(".") if s.strip()]
+    with st.spinner(
+        "🧬 Detecting biomedical entities..."
+    ):
 
-                if len(sentences) >= 2:
-                    summary = ".".join(sentences[:2]) + "."
-                else:
-                    summary = text
+        try:
 
-            except:
+            df_entities = extract_entities(text)
 
-                summary = text[:300] + "..."
+        except Exception as e:
 
-            import re
-
-            entity_patterns = [
-                "KRAS",
-                "EGFR",
-                "TP53",
-                "BRCA1",
-                "BRCA2",
-                "Cetuximab",
-                "Osimertinib",
-                "cancer",
-                "tumor",
-                "tumors",
-                "mutation",
-                "mutations",
-                "therapy",
-                "therapeutic",
-                "drug",
-                "protein",
-                "gene",
-                "cell",
-                "cells",
-                "DNA",
-                "RNA",
-                "biomarker",
-                "patient",
-                "disease",
-                "treatment"
-            ]
-
-            entity_data = []
-            unique_entities = set()
-            GENES = ["KRAS", "EGFR", "TP53", "BRCA1", "BRCA2"]
-
-            DRUGS = ["Cetuximab", "Osimertinib"]
-
-            DISEASES = ["cancer", "tumor", "tumors", "disease"]
-
-            THERAPIES = ["therapy", "therapeutic", "treatment"]
-
-            BIOMARKERS = ["biomarker", "biomarkers"]
-
-            entity_patterns = (
-                GENES
-                + DRUGS
-                + DISEASES
-                + THERAPIES
-                + BIOMARKERS
+            st.error(
+                f"Biomedical entity extraction failed: {str(e)}"
             )
 
-            for pattern in entity_patterns:
-
-                matches = re.findall(
-                    rf"\b{re.escape(pattern)}\b",
-                    text,
-                    flags=re.IGNORECASE
-                )
-
-                for match in matches:
-
-                    if match.lower() not in unique_entities:
-
-                        unique_entities.add(match.lower())
-
-                        if match.upper() in [g.upper() for g in GENES]:
-                            category = "Gene"
-
-                        elif match.lower() in [d.lower() for d in DRUGS]:
-                            category = "Drug"
-
-                        elif match.lower() in [d.lower() for d in DISEASES]:
-                            category = "Disease"
-
-                        elif match.lower() in [t.lower() for t in THERAPIES]:
-                            category = "Therapy"
-
-                        elif match.lower() in [b.lower() for b in BIOMARKERS]:
-                            category = "Biomarker"
-
-                        else:
-                            category = "Other"
-
-                        entity_data.append({
-                            "Entity": match,
-                            "Category": category,
-                            "Confidence": 1.0
-                        })
-            st.write("DEBUG:", len(entity_data))
-            df_entities = pd.DataFrame(entity_data)
-
-            total_entities = len(df_entities)
-
-            avg_confidence = (
-                            1.0 if not df_entities.empty else 0
+            df_entities = pd.DataFrame(
+                columns=[
+                    "Entity",
+                    "Category",
+                    "Confidence"
+                ]
             )
 
-            st.subheader("📊 Research Intelligence Metrics")
 
-            c1, c2, c3 = st.columns(3)
+    # --------------------------------------------------------
+    # Metrics
+    # --------------------------------------------------------
 
-            with c1:
-                        st.metric("🔬 Entities", total_entities)
+    total_entities = len(df_entities)
 
-            with c2:
-                        st.metric("📄 Words", len(text.split()))
+    total_words = len(text.split())
 
-            with c3:
-                        st.metric("🎯 Avg Confidence", avg_confidence)
+    total_sentences = len(
+        [
+            sentence
+            for sentence in re.split(r"[.!?]+", text)
+            if sentence.strip()
+        ]
+    )
+
+    if not df_entities.empty:
+
+        avg_confidence = df_entities[
+            "Confidence"
+        ].mean()
+
+    else:
+
+        avg_confidence = 0
+
+
+    # --------------------------------------------------------
+    # Research Insight
+    # --------------------------------------------------------
+
+    insight = generate_research_insight(
+        df_entities,
+        text
+    )
+
+
+    # ========================================================
+    # METRICS
+    # ========================================================
+
+    st.subheader(
+        "📊 Research Intelligence Metrics"
+    )
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
+
+        st.metric(
+            "🧬 Entities",
+            total_entities
+        )
+
+    with c2:
+
+        st.metric(
+            "📄 Words",
+            total_words
+        )
+
+    with c3:
+
+        st.metric(
+            "📝 Sentences",
+            total_sentences
+        )
+
+    with c4:
+
+        st.metric(
+            "🎯 Avg Confidence",
+            f"{avg_confidence:.2f}"
+        )
+
+
+    st.markdown("---")
+
+
+    # ========================================================
+    # TABS
+    # ========================================================
+
+    tab1, tab2, tab3, tab4 = st.tabs(
+        [
+            "🤖 AI Summary",
+            "🧬 Biomedical Entities",
+            "📊 Literature Analytics",
+            "💡 Research Insights"
+        ]
+    )
+
+
+    # ========================================================
+    # TAB 1 — SUMMARY
+    # ========================================================
+
+    with tab1:
+
+        st.subheader(
+            "📄 Original Biomedical Text"
+        )
+
+        st.write(text)
+
+
+        st.markdown("---")
+
+
+        st.subheader(
+            "🤖 Transformer-Generated Summary"
+        )
+
+        st.success(summary)
+
+
+        st.markdown("---")
+
+
+        report = create_report(
+            text,
+            summary,
+            df_entities,
+            insight
+        )
+
+
+        st.download_button(
+            label="📥 Download Full Analysis Report",
+            data=report,
+            file_name="biomedical_research_analysis.txt",
+            mime="text/plain"
+        )
+
+
+    # ========================================================
+    # TAB 2 — ENTITIES
+    # ========================================================
+
+    with tab2:
+
+        st.subheader(
+            "🧬 Biomedical Named Entity Recognition"
+        )
+
+        st.markdown(
+            """
+            Biomedical entities are automatically extracted
+            using a Transformer-based biomedical NER model.
+            """
+        )
+
+
+        if not df_entities.empty:
+
+            st.dataframe(
+                df_entities,
+                use_container_width=True,
+                hide_index=True
+            )
+
 
             st.markdown("---")
 
-            tab1, tab2, tab3 = st.tabs([
-                        "🤖 AI Summary",
-                        "🧬 Entities",
-                        "📊 Analytics"
-                    ])
+            st.subheader(
+                "Top Detected Entities"
+            )
 
-            with tab1:
+            entity_frequency = (
+                df_entities["Entity"]
+                .value_counts()
+                .head(10)
+                .reset_index()
+            )
 
-                        st.subheader("📄 Original Abstract")
-                        st.write(text)
+            entity_frequency.columns = [
+                "Entity",
+                "Frequency"
+            ]
 
-                        st.subheader("🤖 AI Summary")
-                        st.success(summary)
+            st.dataframe(
+                entity_frequency,
+                use_container_width=True,
+                hide_index=True
+            )
 
-                        st.subheader("💡 Research Insight")
+        else:
 
-                        if not df_entities.empty:
+            st.warning(
+                "No biomedical entities were detected."
+            )
 
-                            top_entities = (
-                                df_entities["Entity"]
-                                .unique()
-                                .tolist()[:5]
-                            )
 
-                            insight = f"""
-            This study highlights {', '.join(top_entities)}
-            as important biomedical entities.
+    # ========================================================
+    # TAB 3 — ANALYTICS
+    # ========================================================
 
-            These findings may have relevance for disease
-            mechanisms, therapeutic targeting, biomarker
-            discovery, and clinical translation.
-            """
+    with tab3:
 
-                        else:
+        st.subheader(
+            "📈 Literature Analytics"
+        )
 
-                            insight = """
-            No major biomedical entities were detected.
-            """
 
-                        st.info(insight)
+        if not df_entities.empty:
 
-                        st.download_button(
-                            label="📥 Download Summary",
-                            data=summary,
-                            file_name="summary.txt",
-                            mime="text/plain"
-                        )
+            # ------------------------------------------------
+            # Entity category distribution
+            # ------------------------------------------------
 
-            with tab2:
+            category_counts = (
+                df_entities["Category"]
+                .value_counts()
+                .reset_index()
+            )
 
-                        st.subheader(
-                            "🧬 Biomedical Entity Detection"
-                        )
+            category_counts.columns = [
+                "Category",
+                "Count"
+            ]
 
-                        if not df_entities.empty:
 
-                            st.dataframe(
-                                df_entities,
-                                use_container_width=True
-                            )
+            fig_category = px.bar(
+                category_counts,
+                x="Category",
+                y="Count",
+                title="Biomedical Entity Distribution",
+                labels={
+                    "Count": "Entity Count",
+                    "Category": "Entity Category"
+                }
+            )
 
-                        else:
+            st.plotly_chart(
+                fig_category,
+                use_container_width=True
+            )
 
-                            st.warning(
-                                "No biomedical entities detected."
-                            )
 
-            with tab3:
+            # ------------------------------------------------
+            # Entity frequency
+            # ------------------------------------------------
 
-                        st.subheader(
-                            "📈 Literature Analytics"
-                        )
+            entity_counts = (
+                df_entities["Entity"]
+                .value_counts()
+                .head(10)
+                .reset_index()
+            )
 
-                        if not df_entities.empty:
+            entity_counts.columns = [
+                "Entity",
+                "Frequency"
+            ]
 
-                            fig = px.histogram(
-                                df_entities,
-                                x="Category",
-                                title="Biomedical Entity Distribution"
-                            )
 
-                            st.plotly_chart(
-                                fig,
-                                use_container_width=True
-                            )
+            fig_entities = px.bar(
+                entity_counts,
+                x="Entity",
+                y="Frequency",
+                title="Top Biomedical Entities",
+                labels={
+                    "Frequency": "Frequency",
+                    "Entity": "Biomedical Entity"
+                }
+            )
 
-                            st.info(f"""
-            Total Words: {len(text.split())}
 
-            Total Biomedical Entities: {total_entities}
+            st.plotly_chart(
+                fig_entities,
+                use_container_width=True
+            )
 
-            Average Confidence Score: {avg_confidence}
-            """)
 
-                        else:
+            # ------------------------------------------------
+            # Summary metrics
+            # ------------------------------------------------
 
-                            st.warning(
-                                "Please enter a biomedical abstract."
-                            )
-# --------------------------------------------------
+            st.markdown("---")
+
+            a1, a2, a3 = st.columns(3)
+
+            with a1:
+
+                st.metric(
+                    "Unique Entities",
+                    df_entities["Entity"]
+                    .str.lower()
+                    .nunique()
+                )
+
+            with a2:
+
+                st.metric(
+                    "Entity Categories",
+                    df_entities["Category"]
+                    .nunique()
+                )
+
+            with a3:
+
+                st.metric(
+                    "Avg Confidence",
+                    f"{avg_confidence:.3f}"
+                )
+
+
+        else:
+
+            st.warning(
+                "No entities available for analytics."
+            )
+
+
+    # ========================================================
+    # TAB 4 — RESEARCH INSIGHTS
+    # ========================================================
+
+    with tab4:
+
+        st.subheader(
+            "💡 Research Insights"
+        )
+
+        st.info(insight)
+
+
+        if not df_entities.empty:
+
+            st.markdown("---")
+
+            st.subheader(
+                "🔬 Key Biomedical Concepts"
+            )
+
+            top_entities = (
+                df_entities["Entity"]
+                .value_counts()
+                .head(5)
+                .index
+                .tolist()
+            )
+
+            for entity in top_entities:
+
+                st.markdown(
+                    f"- **{entity}**"
+                )
+
+
+# ============================================================
 # FOOTER
-# --------------------------------------------------
+# ============================================================
+
 st.markdown("---")
 
 st.caption(
-    "Developed by Nirupam Joarder | Biomedical Research Intelligence Platform | Transformer NLP Project"
+    "Developed by Nirupam Joarder | "
+    "Biomedical Research Intelligence Platform | "
+    "Transformer-Based Biomedical NLP"
 )
