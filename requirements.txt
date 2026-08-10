@@ -6,3 +6,4 @@ torchvision
 plotly
 sentencepiece
 protobuf
+google-genai
